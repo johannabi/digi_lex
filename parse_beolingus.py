@@ -44,9 +44,19 @@ def get_usg(beo_as_dict):
     return usg_set
 
 
-usg = get_usg(input_output.deserialize('data/splitted_beolingus.pickle'))
-for e in usg:
-    print('###')
+def get_pos(beo_as_dict):
+    pos_set = set()
+    pos_pattern = re.compile(r'\{\w+\.?\}')
+    counter = 0
+    for k, v in beo_as_dict.items():
+        # if counter < 10:
+        usg_matches = pos_pattern.findall(str(v))
+        for match in usg_matches:
+            pos_set.add(match)
+        counter += 1
+    return pos_set
+
+
+pos = get_pos(input_output.deserialize('data/splitted_beolingus.pickle'))
+for e in pos:
     print(e)
-    for c in e:
-        print(c, unicodedata.name(c))
