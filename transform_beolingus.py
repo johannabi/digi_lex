@@ -1,3 +1,4 @@
+import re
 from lxml import etree
 import input_output
 
@@ -25,9 +26,17 @@ def transform_in_tei(beo_as_dict):
     text = etree.SubElement(root, 'text')
     body = etree.SubElement(text, 'body')
 
+    usg_pattern = re.compile(r'\[\w+\.?\]')
+    gramm_pattern = re.compile(r'\{\w+\.?\}')
+
     for k1, v1 in beo_as_dict.items():
-        entry = etree.Element('entry')
+
+        if len(v1) > 1:
+            super_entry = etree.Element('superEntry')
+
         for k2, v2 in v1.items():
+
+            entry = etree.Element('entry')
 
             splitted_forms = k2.split(';')
             splitted_senses = v2.split(';')
@@ -35,12 +44,45 @@ def transform_in_tei(beo_as_dict):
             for f in splitted_forms:
                 form = etree.SubElement(entry, 'form')
                 orth = etree.SubElement(form, 'orth')
+
+                gramm_matches = gramm_pattern.findall(f)
+                usg_matches = usg_pattern.findall(f)
+                # we assume , and only allow one gram per form
+                if len(gramm_matches) > 0:
+                    grammGrp = etree.SubElement(form, 'gramGrp')
+                    gramm = etree.SubElement(grammGrp, 'gram')
+                    gramm.text = gramm_matches[0]
+                    f = f.replace(gramm_matches[0], '')
+
+                if len(usg_matches) > 0:
+                    for match in usg_matches:
+                        usg = etree.SubElement(form, 'usg')
+                        usg.text = match
+                        f = f.replace(match, '')
+
+                f = f.strip()
                 orth.text = f
             for s in splitted_senses:
                 sense = etree.SubElement(entry, 'sense')
-                sense.text = s
+                usg_matches = usg_pattern.findall(s)
+                if len(usg_matches) > 0:
+                    for match in usg_matches:
+                        usg = etree.SubElement(sense, 'usg')
+                        usg.text = match
+                        s = s.replace(match, '')
 
-        body.append(entry)
+                definition = etree.SubElement(sense, 'def')
+                s = s.strip()
+                definition.text = s
+
+            if len(v1) > 1:
+                super_entry.append(entry)
+                super_entry.attrib['n'] = str(k1)
+                body.append(super_entry)
+
+            else:
+                entry.attrib['n'] = str(k1)
+                body.append(entry)
 
     et = etree.ElementTree(root)
     return et
