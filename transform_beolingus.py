@@ -1,6 +1,10 @@
 import re
 from lxml import etree
-import input_output
+
+
+def pre_process_beo(beo_as_dict):
+    # we need to replace all the ';' between brackets. we chose a '|' as replacement.
+    return beo_as_dict
 
 
 def transform_in_tei(beo_as_dict):
@@ -26,8 +30,9 @@ def transform_in_tei(beo_as_dict):
     text = etree.SubElement(root, 'text')
     body = etree.SubElement(text, 'body')
 
-    usg_pattern = re.compile(r'\[\w+\.?\]')
-    gramm_pattern = re.compile(r'\{\w+\.?\}')
+    usg_pattern = re.compile(r'(\[(.*?)\])')
+    gramm_pattern = re.compile(r'(\{(.*?)\})')
+    desc_pattern = re.compile(r'(\((.*?)\))')
 
     for k1, v1 in beo_as_dict.items():
 
@@ -47,32 +52,48 @@ def transform_in_tei(beo_as_dict):
 
                 gramm_matches = gramm_pattern.findall(f)
                 usg_matches = usg_pattern.findall(f)
+                desc_matches = desc_pattern.findall(f)
+
                 # we assume , and only allow one gram per form
                 if len(gramm_matches) > 0:
                     grammGrp = etree.SubElement(form, 'gramGrp')
                     gramm = etree.SubElement(grammGrp, 'gram')
-                    gramm.text = gramm_matches[0]
-                    f = f.replace(gramm_matches[0], '')
+                    gramm.text = gramm_matches[0][1]
+                    f = f.replace(gramm_matches[0][0], '')
 
                 if len(usg_matches) > 0:
                     for match in usg_matches:
                         usg = etree.SubElement(form, 'usg')
-                        usg.text = match
-                        f = f.replace(match, '')
+                        usg.text = match[1]
+                        f = f.replace(match[0], '')
 
-                f = f.strip()
+                if len(desc_matches) > 0:
+                    for match in desc_matches:
+                        note = etree.SubElement(form, 'note')
+                        note.text = match[1]
+                        f = f.replace(match[0], '')
+
+                # f = input_output.clean_up_str(f)
                 orth.text = f
             for s in splitted_senses:
                 sense = etree.SubElement(entry, 'sense')
                 usg_matches = usg_pattern.findall(s)
+                desc_matches = desc_pattern.findall(s)
+
                 if len(usg_matches) > 0:
                     for match in usg_matches:
                         usg = etree.SubElement(sense, 'usg')
-                        usg.text = match
-                        s = s.replace(match, '')
+                        usg.text = match[1]
+                        s = s.replace(match[0], '')
+
+                if len(desc_matches) > 0:
+                    for match in desc_matches:
+                        note = etree.SubElement(sense, 'note')
+                        note.text = match[1]
+                        s = s.replace(match[0], '')
 
                 definition = etree.SubElement(sense, 'def')
-                s = s.strip()
+                # s = input_output.clean_up_str(s)
                 definition.text = s
 
             if len(v1) > 1:
@@ -88,5 +109,5 @@ def transform_in_tei(beo_as_dict):
     return et
 
 
-et = transform_in_tei(input_output.deserialize('data/splitted_beolingus.pickle'))
-et.write('data/beolingus_tei_2.xml', pretty_print=True, xml_declaration=True, encoding='utf-8')
+# et = transform_in_tei(input_output.deserialize('data/splitted_beolingus.pickle'))
+# et.write('data/beolingus_tei_2.xml', pretty_print=True, xml_declaration=True, encoding='utf-8')
