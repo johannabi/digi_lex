@@ -1,5 +1,8 @@
 import pickle
 import pyuca
+import string
+
+translator = str.maketrans('', '', string.punctuation)
 
 
 def sort_set(set_to_sort):
@@ -28,3 +31,9 @@ def serialize(filename, data):
 def deserialize(filename):
     with open(filename, mode='rb') as input:
         return pickle.load(input, encoding='utf-8')
+
+
+def clean_up_str(s):
+    s = s.translate(translator)
+    s = s.strip()
+    return s
