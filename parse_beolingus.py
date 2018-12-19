@@ -31,22 +31,46 @@ def split_beolingus(lines):
     return beo_dict
 
 
+def pre_process_beo(beo_as_dict):
+    # we need to replace all the ';' between brackets. we chose a '|' as replacement.
+    desc_pattern = re.compile(r'(\((.*?)\))')
+    for k1, v1 in beo_as_dict.items():
+        for k2, v2 in v1.items():
+            key_matches = desc_pattern.findall(str(k2))
+            val_matches = desc_pattern.findall(str(v2))
+            for match in key_matches:
+                if ';' in match[1]:
+                    rep = match[1].replace(';', '|')
+                    k2 = str(k2).replace(match[1], rep)
+                    k2 = k2.strip()
+                    v1 = {k2: v2}
+                    beo_as_dict[k1] = v1
+            for match in val_matches:
+                if ';' in match[1]:
+                    rep = match[1].replace(';', '|')
+                    v2 = str(v2).replace(match[1], rep)
+                    v2 = v2.strip()
+                    v1 = {k2: v2}
+                    beo_as_dict[k1] = v1
+    return beo_as_dict
+
+
 def get_usg(beo_as_dict):
     usg_set = set()
-    usg_pattern = re.compile(r'\[\w+\.?\]')
+    usg_pattern = re.compile(r'(\[(.*?)\])')
     counter = 0
     for k, v in beo_as_dict.items():
         # if counter < 10:
         usg_matches = usg_pattern.findall(str(v))
         for match in usg_matches:
-            usg_set.add(match)
+            usg_set.add(match[0])
         counter += 1
     return usg_set
 
 
 def get_gramm_info(beo_as_dict):
     gramm_set = set()
-    gramm_pattern = re.compile(r'\{\w+\.?\}')
+    gramm_pattern = re.compile(r'\{(.*?)\}')
     counter = 0
     for k, v in beo_as_dict.items():
         # if counter < 10:
@@ -57,6 +81,5 @@ def get_gramm_info(beo_as_dict):
     return gramm_set
 
 
-pos = get_gramm_info(input_output.deserialize('data/splitted_beolingus.pickle'))
-for e in pos:
-    print(e)
+prepro = pre_process_beo(input_output.deserialize('data/splitted_beolingus.pickle'))
+input_output.serialize('data/splitted_beolingus_prepro.pickle', prepro)
