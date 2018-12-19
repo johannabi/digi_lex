@@ -58,26 +58,20 @@ def pre_process_beo(beo_as_dict):
 def get_usg(beo_as_dict):
     usg_set = set()
     usg_pattern = re.compile(r'(\[(.*?)\])')
-    counter = 0
     for k, v in beo_as_dict.items():
-        # if counter < 10:
         usg_matches = usg_pattern.findall(str(v))
         for match in usg_matches:
             usg_set.add(match[0])
-        counter += 1
     return usg_set
 
 
 def get_gramm_info(beo_as_dict):
     gramm_set = set()
     gramm_pattern = re.compile(r'\{(.*?)\}')
-    counter = 0
     for k, v in beo_as_dict.items():
-        # if counter < 10:
         usg_matches = gramm_pattern.findall(str(v))
         for match in usg_matches:
             gramm_set.add(match)
-        counter += 1
     return gramm_set
 
 
