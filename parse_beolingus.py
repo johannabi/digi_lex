@@ -76,4 +76,4 @@ def get_gramm_info(beo_as_dict):
 
 
 prepro = pre_process_beo(input_output.deserialize('data/splitted_beolingus.pickle'))
-input_output.serialize('data/splitted_beolingus_prepro.pickle', prepro)
+input_output.write_dict('data/splitted_beolingus_prepro.txt', prepro)

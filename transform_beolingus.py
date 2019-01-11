@@ -1,6 +1,17 @@
+import os
 import re
 from lxml import etree
 import input_output
+
+
+def validate(tei_file, rng_schema):
+    # RelaxNG validation
+    parser = etree.XMLParser(recover=True)
+    tei_parsed = etree.parse(tei_file, parser)
+    rng_parsed = etree.parse(rng_schema)
+    rng_validator = etree.RelaxNG(rng_parsed)
+    validation_rng = rng_validator.validate(tei_parsed)
+    return validation_rng
 
 
 def transform_in_tei(beo_as_dict):
@@ -34,7 +45,9 @@ def transform_in_tei(beo_as_dict):
         if len(v1) > 1:
             super_entry = etree.Element('superEntry')
 
+        en_counter = 0
         for k2, v2 in v1.items():
+            en_counter += 1
 
             entry = etree.Element('entry')
 
@@ -44,7 +57,7 @@ def transform_in_tei(beo_as_dict):
             for i, f in enumerate(splitted_forms):
                 i += 1
                 form = etree.SubElement(entry, 'form')
-                form.attrib['{http://www.w3.org/XML/1998/namespace}id'] = "en_{}_f_{}".format(str(k1), i)
+                form.attrib['{http://www.w3.org/XML/1998/namespace}id'] = "en_{}_f_{}_{}".format(str(k1), en_counter, i)
 
                 orth = etree.SubElement(form, 'orth')
                 orth.attrib['{http://www.w3.org/XML/1998/namespace}lang'] = "de"
@@ -71,7 +84,8 @@ def transform_in_tei(beo_as_dict):
                 i += 1
 
                 sense = etree.SubElement(entry, 'sense')
-                sense.attrib['{http://www.w3.org/XML/1998/namespace}id'] = "en_{}_s_{}".format(str(k1), i)
+                sense.attrib['{http://www.w3.org/XML/1998/namespace}id'] = "en_{}_s_{}_{}".format(str(k1), en_counter,
+                                                                                                  i)
                 sense.attrib['{http://www.w3.org/XML/1998/namespace}lang'] = "en"
 
                 usg_matches = usg_pattern.findall(s)
@@ -94,11 +108,14 @@ def transform_in_tei(beo_as_dict):
 
             else:
                 entry.attrib['{http://www.w3.org/XML/1998/namespace}id'] = "en_{}".format(str(k1))
+
                 body.append(entry)
 
     et = etree.ElementTree(root)
     return et
 
 
-et = transform_in_tei(input_output.deserialize('data/splitted_beolingus_prepro.pickle'))
-et.write('data/beolingus_tei_2.xml', pretty_print=True, xml_declaration=True, encoding='utf-8')
+#et = transform_in_tei(input_output.deserialize('data/splitted_beolingus_prepro.pickle'))
+rng_val = validate('tei_files/beo_en_de.tei', 'tei_files/beo_en_de.rng')
+print(rng_val)
+# et.write('tei_files/beo_en_de.tei', pretty_print=True, xml_declaration=True, encoding='utf-8')
