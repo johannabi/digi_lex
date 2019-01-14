@@ -51,7 +51,7 @@ def index_entries(entries, index_name):
     for i, e in enumerate(entries):
 
         # get each form
-        entry_to_index = Entry(meta={'index': index_name})
+        entry_to_index = Entry(meta={'id': e.attrib['{http://www.w3.org/XML/1998/namespace}id'], 'index': index_name})
 
         tei_forms = e.xpath('./ns:form', namespaces=namespaces)
 
@@ -121,4 +121,4 @@ def del_and_re_index(index_name, tei_to_index):
 
 del_and_re_index('beo', 'tei_files/beo_en_de_short.tei')
 
-#get_tei_entries('tei_files/beo_en_de_short.tei')
+# get_tei_entries('tei_files/beo_en_de_short.tei')
