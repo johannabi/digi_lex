@@ -16,14 +16,14 @@ client = Elasticsearch()
 
 
 class Form(InnerDoc):
-    # TODO add_ID
+    form_id = field.Text()
     orth = field.Keyword(fields={'raw': field.Keyword()})
     gram = field.Text(analyzer='standard')
     usgs = field.Text(analyzer='standard')
 
 
 class Sense(InnerDoc):
-    # TODO add_ID
+    sense_id = field.Text()
     definition = field.Text(analyzer='standard')
     usgs = field.Text(analyzer='standard')
 
@@ -58,9 +58,9 @@ def index_entries(entries, index_name):
         forms = []
 
         for form in tei_forms:
-            #form_id = form.attrib['{http://www.w3.org/XML/1998/namespace}id']
-            #TODO set_ID
+            form_id = form.attrib['{http://www.w3.org/XML/1998/namespace}id']
             new_form = Form()
+            new_form.form_id = form_id
             orths = form.xpath('./ns:orth', namespaces=namespaces)
             new_form.orth = orths[0].text
             grams = form.xpath('./ns:gramGrp/ns:gram', namespaces=namespaces)
@@ -81,8 +81,8 @@ def index_entries(entries, index_name):
         senses = []
         for sense in tei_senses:
             sense_id = sense.attrib['{http://www.w3.org/XML/1998/namespace}id']
-            # TODO set_ID
             new_sense = Sense()
+            new_sense.sense_id = sense_id
             defs = sense.xpath('./ns:def', namespaces=namespaces)
             new_sense.definition = defs[0].text
             sense_usgs = form.xpath('./ns:usg', namespaces=namespaces)
@@ -121,4 +121,4 @@ def del_and_re_index(index_name, tei_to_index):
 
 del_and_re_index('beo', 'tei_files/beo_en_de_short.tei')
 
-# get_tei_entries('tei_files/beo_en_de.tei')
+#get_tei_entries('tei_files/beo_en_de_short.tei')
