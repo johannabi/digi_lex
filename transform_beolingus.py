@@ -4,16 +4,6 @@ from lxml import etree
 import input_output
 
 
-def validate(tei_file, rng_schema):
-    # RelaxNG validation
-    parser = etree.XMLParser(recover=True)
-    tei_parsed = etree.parse(tei_file, parser)
-    rng_parsed = etree.parse(rng_schema)
-    rng_validator = etree.RelaxNG(rng_parsed)
-    validation_rng = rng_validator.validate(tei_parsed)
-    return validation_rng
-
-
 def transform_in_tei(beo_as_dict):
     root = etree.Element('TEI', attrib={"xmlns": 'http://www.tei-c.org/ns/1.0'})
 
@@ -114,8 +104,13 @@ def transform_in_tei(beo_as_dict):
     et = etree.ElementTree(root)
     return et
 
+def validate(tei_file, rng_schema):
+    parser = etree.XMLParser(recover=True)
+    tei_parsed = etree.parse(tei_file, parser)
+    rng_parsed = etree.parse(rng_schema)
+    rng_validator = etree.RelaxNG(rng_parsed)
+    validation_rng = rng_validator.validate(tei_parsed)
+    return validation_rng
 
 #et = transform_in_tei(input_output.deserialize('data/splitted_beolingus_prepro.pickle'))
-rng_val = validate('tei_files/beo_en_de.tei', 'tei_files/beo_en_de.rng')
-print(rng_val)
 # et.write('tei_files/beo_en_de.tei', pretty_print=True, xml_declaration=True, encoding='utf-8')
