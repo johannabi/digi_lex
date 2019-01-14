@@ -12,3 +12,19 @@ curl -X GET "localhost:9200/beo/_search?pretty" -H 'Content-Type: application/js
     }
 }
 '
+
+#get all the German forms that have the suffix '-ung'
+curl -X GET "localhost:9200/beo/_search?pretty" -H 'Content-Type: application/json' -d'
+	{
+	    "query": {
+	        "nested" : {
+	            "path" : "forms",
+	             "query" : {
+	                "regexp" : {
+	                    "forms.orth" : ".*ung"
+	                }
+	            }
+	        }
+	    }
+	}
+	'
