@@ -91,6 +91,7 @@ def transform_in_tei(beo_as_dict):
                 definition.text = s.strip()
 
             if len(v1) > 1:
+                entry.attrib['{http://www.w3.org/XML/1998/namespace}id'] = "en_{}_{}".format(str(k1), en_counter)
                 super_entry.append(entry)
                 super_entry.attrib['{http://www.w3.org/XML/1998/namespace}id'] = "en_{}".format(str(k1))
 
@@ -112,5 +113,5 @@ def validate(tei_file, rng_schema):
     validation_rng = rng_validator.validate(tei_parsed)
     return validation_rng
 
-#et = transform_in_tei(input_output.deserialize('data/splitted_beolingus_prepro.pickle'))
-# et.write('tei_files/beo_en_de.tei', pretty_print=True, xml_declaration=True, encoding='utf-8')
+et = transform_in_tei(input_output.deserialize('data/splitted_beolingus_prepro.pickle'))
+et.write('tei_files/beo_en_de.tei', pretty_print=True, xml_declaration=True, encoding='utf-8')
