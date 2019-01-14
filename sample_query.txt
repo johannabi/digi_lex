@@ -1,0 +1,14 @@
+curl -X GET "localhost:9200/beo/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "nested" : {
+            "path" : "forms",
+             "query" : {
+                "prefix" : {
+                    "forms.orth" : "Aal"
+                }
+            }
+        }
+    }
+}
+'
