@@ -119,6 +119,6 @@ def del_and_re_index(index_name, tei_to_index):
     index_file(index_name, tei_to_index)
 
 
-del_and_re_index('beo', 'tei_files/beo_en_de_short.tei')
+del_and_re_index('beo', 'data_to_publish/beo_en_de_short.tei')
 
-# get_tei_entries('tei_files/beo_en_de_short.tei')
+# get_tei_entries('data_to_publish/beo_en_de_short.tei')

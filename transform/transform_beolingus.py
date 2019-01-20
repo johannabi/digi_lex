@@ -1,7 +1,6 @@
-import os
 import re
 from lxml import etree
-import input_output
+from utils import input_output
 
 
 def transform_in_tei(beo_as_dict):
@@ -113,5 +112,5 @@ def validate(tei_file, rng_schema):
     validation_rng = rng_validator.validate(tei_parsed)
     return validation_rng
 
-et = transform_in_tei(input_output.deserialize('data/splitted_beolingus_prepro.pickle'))
-et.write('tei_files/beo_en_de.tei', pretty_print=True, xml_declaration=True, encoding='utf-8')
+et = transform_in_tei(input_output.deserialize('data_to_process/splitted_beolingus_prepro.pickle'))
+et.write('data_to_publish/beo_en_de.tei', pretty_print=True, xml_declaration=True, encoding='utf-8')

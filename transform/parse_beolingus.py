@@ -1,6 +1,5 @@
 import re
-import unicodedata
-import input_output
+from utils import input_output
 
 
 def beolingus_as_list(file):
@@ -75,5 +74,5 @@ def get_gramm_info(beo_as_dict):
     return gramm_set
 
 
-prepro = pre_process_beo(input_output.deserialize('data/splitted_beolingus.pickle'))
-input_output.write_dict('data/splitted_beolingus_prepro.txt', prepro)
+prepro = pre_process_beo(input_output.deserialize('data_to_process/splitted_beolingus.pickle'))
+input_output.write_dict('data_to_process/splitted_beolingus_prepro.txt', prepro)
