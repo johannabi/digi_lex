@@ -3,7 +3,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch_dsl import document, field, InnerDoc, analyzer, connections, Index
 from datetime import datetime
 
-namespaces = {'ns': 'http://www.tei-c.org/ns/1.0'}
+namespaces = {'ns': 'http://www.tei-c.org/tei/1.0'}
 
 html_strip = analyzer('html_strip',
                       tokenizer="standard",
@@ -42,7 +42,7 @@ class Entry(document.Document):
 
 def get_tei_entries(beo_tei):
     tree = etree.parse(beo_tei)
-    entries = tree.xpath('//ns:entry', namespaces=namespaces)
+    entries = tree.xpath('//tei:entry', namespaces=namespaces)
     print('len_entries', len(entries))
     return entries
 
@@ -53,7 +53,7 @@ def index_entries(entries, index_name):
         # get each form
         entry_to_index = Entry(meta={'id': e.attrib['{http://www.w3.org/XML/1998/namespace}id'], 'index': index_name})
 
-        tei_forms = e.xpath('./ns:form', namespaces=namespaces)
+        tei_forms = e.xpath('./tei:form', namespaces=namespaces)
 
         forms = []
 
@@ -61,12 +61,12 @@ def index_entries(entries, index_name):
             form_id = form.attrib['{http://www.w3.org/XML/1998/namespace}id']
             new_form = Form()
             new_form.form_id = form_id
-            orths = form.xpath('./ns:orth', namespaces=namespaces)
+            orths = form.xpath('./tei:orth', namespaces=namespaces)
             new_form.orth = orths[0].text
-            grams = form.xpath('./ns:gramGrp/ns:gram', namespaces=namespaces)
+            grams = form.xpath('./tei:gramGrp/tei:gram', namespaces=namespaces)
             if len(grams) > 0:
                 new_form.gram = grams[0].text
-            form_usgs = form.xpath('./ns:usg', namespaces=namespaces)
+            form_usgs = form.xpath('./tei:usg', namespaces=namespaces)
             if len(form_usgs) > 0:
                 form_usgs_text = []
                 for usg in form_usgs:
@@ -76,16 +76,16 @@ def index_entries(entries, index_name):
 
         entry_to_index.forms = forms
 
-        tei_senses = e.xpath('./ns:sense', namespaces=namespaces)
+        tei_senses = e.xpath('./tei:sense', namespaces=namespaces)
 
         senses = []
         for sense in tei_senses:
             sense_id = sense.attrib['{http://www.w3.org/XML/1998/namespace}id']
             new_sense = Sense()
             new_sense.sense_id = sense_id
-            defs = sense.xpath('./ns:def', namespaces=namespaces)
+            defs = sense.xpath('./tei:def', namespaces=namespaces)
             new_sense.definition = defs[0].text
-            sense_usgs = form.xpath('./ns:usg', namespaces=namespaces)
+            sense_usgs = form.xpath('./tei:usg', namespaces=namespaces)
             if len(sense_usgs) > 0:
                 sense_usgs_text = []
                 for usg in sense_usgs:
