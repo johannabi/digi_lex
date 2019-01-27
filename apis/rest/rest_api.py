@@ -17,7 +17,7 @@ def make_json_response(obj):
     return resp
 
 
-def select_from_elatic_response(elastic_raw):
+def select_from_elastic_response(elastic_raw):
     data = {}
     from_elastic = []
     for e in elastic_raw:
@@ -88,7 +88,7 @@ def search():
             query_type = 'term'
         elastics_response = get_from_elastic('beo', query, query_type, field)
         resp = make_json_response(
-            select_from_elatic_response(elastics_response['hits']['hits']))
+            select_from_elastic_response(elastics_response['hits']['hits']))
     else:
         elastics_response = {
             'you need to use this path for searching': ':',
