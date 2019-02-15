@@ -2,8 +2,9 @@ from lxml import etree
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import document, field, InnerDoc, analyzer, connections, Index
 from datetime import datetime
+from bs4 import BeautifulSoup
 
-namespaces = {'ns': 'http://www.tei-c.org/tei/1.0'}
+namespaces = {'ns': 'http://www.tei-c.org/tei/1.0'} # key ursprünglich ns
 
 html_strip = analyzer('html_strip',
                       tokenizer="standard",
@@ -18,20 +19,12 @@ client = Elasticsearch()
 class Form(InnerDoc):
     form_id = field.Text()
     orth = field.Keyword(fields={'raw': field.Keyword()})
-    gram = field.Text(analyzer='standard')
-    usgs = field.Text(analyzer='standard')
-
-
-class Sense(InnerDoc):
-    sense_id = field.Text()
-    definition = field.Text(analyzer='standard')
-    usgs = field.Text(analyzer='standard')
 
 
 class Entry(document.Document):
     forms = field.Nested(Form)
-    senses = field.Nested(Sense)
     created = field.Date()
+    superentry = field.Text()
 
     def save(self, **kwargs):
         return super(Entry, self).save(**kwargs)
@@ -40,63 +33,40 @@ class Entry(document.Document):
         return datetime.now() > self.created
 
 
-def get_tei_entries(beo_tei):
-    tree = etree.parse(beo_tei)
-    entries = tree.xpath('//tei:entry', namespaces=namespaces)
-    print('len_entries', len(entries))
-    return entries
+def get_tei_entries(comp_tei):
+    handler = open(comp_tei).read() # TODO utf8 encoding
+    soup = BeautifulSoup(handler, 'lxml-xml')
+    superentries = soup.find_all('superEntry')
+    return(superentries)
 
 
-def index_entries(entries, index_name):
-    for i, e in enumerate(entries):
+def index_entries(superentries, index_name):
+    for i, e in enumerate(superentries):
 
-        # get each form
-        entry_to_index = Entry(meta={'id': e.attrib['{http://www.w3.org/XML/1998/namespace}id'], 'index': index_name})
+        # meta bezieht sich auf elastic search
+        se_index = e.get('xml:id') # index of superEntry
+        entries = e.find_all('entry')
+        for entry in entries:
+            entry_to_index = Entry(meta={'id': entry.get('xml:id'), 'index': index_name})
+            tei_forms = e.find_all('form')
 
-        tei_forms = e.xpath('./tei:form', namespaces=namespaces)
+            forms = []
 
-        forms = []
+            for form in tei_forms:
+                form_id = form.get('xml:id')
+                new_form = Form()
+                new_form.form_id = form_id
 
-        for form in tei_forms:
-            form_id = form.attrib['{http://www.w3.org/XML/1998/namespace}id']
-            new_form = Form()
-            new_form.form_id = form_id
-            orths = form.xpath('./tei:orth', namespaces=namespaces)
-            new_form.orth = orths[0].text
-            grams = form.xpath('./tei:gramGrp/tei:gram', namespaces=namespaces)
-            if len(grams) > 0:
-                new_form.gram = grams[0].text
-            form_usgs = form.xpath('./tei:usg', namespaces=namespaces)
-            if len(form_usgs) > 0:
-                form_usgs_text = []
-                for usg in form_usgs:
-                    form_usgs_text.append(usg.text)
-                new_form.usgs = form_usgs_text
-            forms.append(new_form)
+                # TODO multiple orthographies
+                tei_orths = form.find_all('orth')
+                # provisorisch wird nur die erste Orth aufgenommen
+                new_form.orth = tei_orths[0].text
+                forms.append(new_form)
 
-        entry_to_index.forms = forms
+            entry_to_index.forms = forms
 
-        tei_senses = e.xpath('./tei:sense', namespaces=namespaces)
-
-        senses = []
-        for sense in tei_senses:
-            sense_id = sense.attrib['{http://www.w3.org/XML/1998/namespace}id']
-            new_sense = Sense()
-            new_sense.sense_id = sense_id
-            defs = sense.xpath('./tei:def', namespaces=namespaces)
-            new_sense.definition = defs[0].text
-            sense_usgs = form.xpath('./tei:usg', namespaces=namespaces)
-            if len(sense_usgs) > 0:
-                sense_usgs_text = []
-                for usg in sense_usgs:
-                    sense_usgs_text.append(usg.text)
-                new_sense.usgs = sense_usgs_text
-            senses.append(new_sense)
-
-        entry_to_index.senses = senses
-
-        entry_to_index.created = datetime.now()
-        entry_to_index.save()
+            entry_to_index.created = datetime.now()
+            entry_to_index.save()
 
 
 def delete_index(index_name):
@@ -107,6 +77,7 @@ def delete_index(index_name):
 
 def index_file(index_name, tei_file):
     Entry.init(index_name)
+    # entries = get_tei_entries(tei_file)
     entries = get_tei_entries(tei_file)
     index_entries(entries, index_name)
     print('done with it')
@@ -119,6 +90,5 @@ def del_and_re_index(index_name, tei_to_index):
     index_file(index_name, tei_to_index)
 
 
-del_and_re_index('beo', 'data_to_publish/beo_en_de_short.tei')
-
-# get_tei_entries('data_to_publish/beo_en_de_short.tei')
+del_and_re_index('comp', '../data_to_publish/compdict_clean.tei')
+# get_tei_entries('../data_to_publish/compdict.tei')

@@ -8,6 +8,6 @@ def test_simple_query(query, query_type, field):
     return r
 
 
-test_simple_query('Hochwasserabfluss', 'term', 'form')
+test_simple_query('Schreiben von Algorithmen', 'term', 'form')
 test_simple_query('.*luss', 'regexp', 'form')
-test_simple_query('discharge', 'match', 'sense')
+test_simple_query('discharge', 'match', 'form')

@@ -19,20 +19,21 @@ def json2obj(data):
 class Form(graphene.ObjectType):
     form_id = graphene.String()
     orth = graphene.String()
-    gram = graphene.String()
-    usgs = graphene.List(graphene.String)
+    # gram = graphene.String()
+    # usgs = graphene.List(graphene.String)
 
 
-class Sense(graphene.ObjectType):
-    sense_id = graphene.String()
-    definition = graphene.String()
-    usgs = graphene.List(graphene.String)
+#class Sense(graphene.ObjectType):
+#    sense_id = graphene.String()
+#    definition = graphene.String()
+#    usgs = graphene.List(graphene.String)
 
 
 class DictEntry(graphene.ObjectType):
     id = graphene.String()
     forms = graphene.List(Form)
-    senses = graphene.List(Sense)
+    superentry = graphene.String()
+    #senses = graphene.List(Sense)
 
 
 def select_from_elastic_response(elastic_raw):
@@ -41,7 +42,7 @@ def select_from_elastic_response(elastic_raw):
         elastic_result = {}
         elastic_result['id'] = e['_id']
         elastic_result['forms'] = e['_source']['forms']
-        elastic_result['senses'] = e['_source']['senses']
+        # elastic_result['senses'] = e['_source']['senses']
         from_elastic.append(elastic_result)
     return from_elastic
 
@@ -66,19 +67,6 @@ def get_from_elastic(dict_id, query, query_type, field):
                                         }
                                     }
                                 }})
-    if field == 'sense':
-        res = client.search(index=dict_id,
-                            body={
-                                "query": {
-                                    "nested": {
-                                        "path": "senses",
-                                        "query": {
-                                            query_type: {
-                                                "senses.definition": query
-                                            }
-                                        }
-                                    }
-                                }})
 
     return res
 
@@ -88,6 +76,6 @@ class DictQuery(graphene.ObjectType):
                             field=graphene.String())
 
     def resolve_entries(self, info, query, query_type, field):
-        res = get_from_elastic('beo', query=query, query_type=query_type, field=field)
+        res = get_from_elastic('comp', query=query, query_type=query_type, field=field)
         parsed_results = select_from_elastic_response(res['hits']['hits'])
         return json2obj(json.dumps(parsed_results))

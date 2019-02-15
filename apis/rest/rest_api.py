@@ -21,10 +21,11 @@ def select_from_elastic_response(elastic_raw):
     data = {}
     from_elastic = []
     for e in elastic_raw:
+        print(e)
         elastic_result = {}
         elastic_result['id'] = e['_id']
         elastic_result['forms'] = e['_source']['forms']
-        elastic_result['senses'] = e['_source']['senses']
+        #elastic_result['senses'] = e['_source']['senses']
         from_elastic.append(elastic_result)
     data['data'] = from_elastic
     return data
@@ -43,19 +44,6 @@ def get_from_elastic(dict_id, query, query_type, field):
                                         "query": {
                                             query_type: {
                                                 "forms.orth": query
-                                            }
-                                        }
-                                    }
-                                }})
-    if field == 'sense':
-        res = client.search(index=dict_id,
-                            body={
-                                "query": {
-                                    "nested": {
-                                        "path": "senses",
-                                        "query": {
-                                            query_type: {
-                                                "senses.definition": query
                                             }
                                         }
                                     }
@@ -86,7 +74,7 @@ def search():
     if query:
         if query_type is None:
             query_type = 'term'
-        elastics_response = get_from_elastic('beo', query, query_type, field)
+        elastics_response = get_from_elastic('comp', query, query_type, field)
         resp = make_json_response(
             select_from_elastic_response(elastics_response['hits']['hits']))
     else:
@@ -107,8 +95,9 @@ app.url_map = Map([
     Rule('/v1/search', endpoint='search')
 ])
 
-app_name = app.config["APPLICATION_NAME"] = 'BEO_REST_API'
+app_name = app.config["APPLICATION_NAME"] = 'COMP_REST_API'
 app_port = app.config.get('APPLICATION_PORT', 5000)
+
 
 if __name__ == '__main__':
     from werkzeug.serving import run_simple
